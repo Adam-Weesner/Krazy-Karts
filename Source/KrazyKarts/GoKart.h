@@ -12,8 +12,6 @@ class KRAZYKARTS_API AGoKart : public APawn
 public:
 	AGoKart();
 	virtual void Tick(float DeltaTime) override;
-	void GetVelocity(float DeltaTime);
-	void SetOffset(float DeltaTime);
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 protected:
@@ -26,12 +24,20 @@ protected:
 	void MoveRight(float Axis);
 
 private:
-	UPROPERTY(EditDefaultsOnly)
+	void AddRotation(float DeltaTime);
+	void GetVelocity(float DeltaTime);
+	void SetOffset(float DeltaTime);
+
+	UPROPERTY(Category = "Setup", EditDefaultsOnly)
 	float MaxDrivingForce = 10000; //N: Force applied to car when throttle is fully down
 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(Category = "Setup", EditDefaultsOnly)
+	float MaxDegreesPerSecond = 90.0f;
+
+	UPROPERTY(Category = "Setup", EditDefaultsOnly)
 	float Mass = 1000; // kg
 
 	FVector Velocity;
 	float Throttle;
+	float SteeringThrow;
 };
