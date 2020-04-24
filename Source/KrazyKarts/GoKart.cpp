@@ -37,6 +37,7 @@ void AGoKart::Tick(float DeltaTime)
 void AGoKart::GetVelocity(float DeltaTime)
 {
 	FVector Force = GetActorForwardVector() * MaxDrivingForce * Throttle;
+	Force += GetResistance();
 	FVector Acceleration = Force / Mass;
 
 	Velocity += Acceleration * DeltaTime;
@@ -55,6 +56,12 @@ void AGoKart::SetOffset(float DeltaTime)
 	}
 }
 
+FVector AGoKart::GetResistance()
+{
+	float AirResistance = -Velocity.SizeSquared() * DRAG_COEFFECIENT;
+	return GetActorForwardVector().GetSafeNormal() * AirResistance;
+}
+
 void AGoKart::AddRotation(float DeltaTime)
 {
 	float RotationAngle = MaxDegreesPerSecond * SteeringThrow * DeltaTime;
@@ -63,7 +70,6 @@ void AGoKart::AddRotation(float DeltaTime)
 	Velocity = RotationDelta.RotateVector(Velocity);
 
 	AddActorWorldRotation(RotationDelta, true);
-	
 }
 
 // Called to bind functionality to input

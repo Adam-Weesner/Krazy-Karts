@@ -27,6 +27,7 @@ private:
 	void AddRotation(float DeltaTime);
 	void GetVelocity(float DeltaTime);
 	void SetOffset(float DeltaTime);
+	FVector GetResistance();
 
 	UPROPERTY(Category = "Setup", EditDefaultsOnly)
 	float MaxDrivingForce = 10000; //N: Force applied to car when throttle is fully down
@@ -40,4 +41,5 @@ private:
 	FVector Velocity;
 	float Throttle;
 	float SteeringThrow;
+	const float DRAG_COEFFECIENT = 16.0f;
 };
