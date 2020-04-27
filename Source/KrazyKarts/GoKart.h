@@ -16,14 +16,20 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
-	
-	UFUNCTION(BlueprintCallable, Server, Reliable, WithValidation)
-	void Server_MoveForward(float Axis);
 
-	UFUNCTION(BlueprintCallable, Server, Reliable, WithValidation)
-	void Server_MoveRight(float Axis);
+	UFUNCTION(BlueprintCallable)
+	void MoveForward(float Axis);
+
+	UFUNCTION(BlueprintCallable)
+	void MoveRight(float Axis);
 
 private:
+	UFUNCTION(Server, Reliable, WithValidation)
+	void Server_MoveForward(float Axis);
+
+	UFUNCTION(Server, Reliable, WithValidation)
+	void Server_MoveRight(float Axis);
+
 	void AddRotation(float DeltaTime);
 	void GetVehicleVelocity(float DeltaTime);
 	void SetOffset(float DeltaTime);

@@ -1,6 +1,7 @@
 // Written by Adam Weesner @ 2020
 #include "GoKart.h"
 #include "Engine/World.h"
+#include "DrawDebugHelpers.h"
 
 AGoKart::AGoKart()
 {
@@ -12,9 +13,21 @@ void AGoKart::BeginPlay()
 	Super::BeginPlay();
 }
 
-void AGoKart::Server_MoveForward_Implementation(float Axis)
+void AGoKart::MoveForward(float Axis)
 {
 	Throttle = FMath::Clamp(Axis, -1.0f, 1.0f);
+	Server_MoveForward(Throttle);
+}
+
+void AGoKart::MoveRight(float Axis)
+{
+	SteeringThrow = FMath::Clamp(Axis, -1.0f, 1.0f);
+	Server_MoveRight(SteeringThrow);
+}
+
+void AGoKart::Server_MoveForward_Implementation(float Axis)
+{
+	Throttle = Axis;
 }
 
 bool AGoKart::Server_MoveForward_Validate(float Axis)
@@ -24,12 +37,34 @@ bool AGoKart::Server_MoveForward_Validate(float Axis)
 
 void AGoKart::Server_MoveRight_Implementation(float Axis)
 {
-	SteeringThrow = FMath::Clamp(Axis, -1.0f, 1.0f);
+	SteeringThrow = Axis;
 }
 
 bool AGoKart::Server_MoveRight_Validate(float Axis)
 {
 	return FMath::Abs(Axis) <= 1;
+}
+
+FString GetEnumText(ENetRole Role)
+{
+	switch (Role)
+	{
+	case ROLE_None:
+		return "None";
+		break;
+	case  ROLE_SimulatedProxy:
+		return "Simulated Proxy";
+		break;
+	case ROLE_AutonomousProxy:
+		return "Autonomous Proxy";
+		break;
+	case ROLE_Authority:
+		return "Authority";
+		break;
+	default:
+		return "";
+		break;
+	}
 }
 
 void AGoKart::Tick(float DeltaTime)
@@ -39,6 +74,8 @@ void AGoKart::Tick(float DeltaTime)
 	GetVehicleVelocity(DeltaTime);
 	SetOffset(DeltaTime);
 	AddRotation(DeltaTime);
+
+	DrawDebugString(GetWorld(), FVector(0, 0, 100), GetEnumText(Role), this, FColor::White, DeltaTime);
 }
 
 void AGoKart::GetVehicleVelocity(float DeltaTime)
