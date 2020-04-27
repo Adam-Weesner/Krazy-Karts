@@ -1,5 +1,6 @@
 // Written by Adam Weesner @ 2020
 #include "GoKart.h"
+#include "Engine/World.h"
 
 // Sets default values
 AGoKart::AGoKart()
@@ -16,12 +17,12 @@ void AGoKart::BeginPlay()
 
 void AGoKart::MoveForward(float Axis)
 {
-	Throttle = Axis;
+	Throttle = FMath::Clamp(Axis, -1.0f, 1.0f);
 }
 
 void AGoKart::MoveRight(float Axis)
 {
-	SteeringThrow = Axis;
+	SteeringThrow = FMath::Clamp(Axis, -1.0f, 1.0f);
 }
 
 // Called every frame
@@ -37,7 +38,9 @@ void AGoKart::Tick(float DeltaTime)
 void AGoKart::GetVelocity(float DeltaTime)
 {
 	FVector Force = GetActorForwardVector() * MaxDrivingForce * Throttle;
-	Force += GetResistance();
+	Force += GetAirResistance();
+	Force += GetRollingResistance();
+
 	FVector Acceleration = Force / Mass;
 
 	Velocity += Acceleration * DeltaTime;
@@ -56,20 +59,29 @@ void AGoKart::SetOffset(float DeltaTime)
 	}
 }
 
-FVector AGoKart::GetResistance()
+FVector AGoKart::GetAirResistance()
 {
-	float AirResistance = -Velocity.SizeSquared() * DRAG_COEFFECIENT;
-	return GetActorForwardVector().GetSafeNormal() * AirResistance;
+	FVector AirResistance = -Velocity.GetSafeNormal() * Velocity.SizeSquared() * DragCoeffecient;
+	return AirResistance;
+}
+
+FVector AGoKart::GetRollingResistance()
+{
+	float AccelerationDueToGravity = -GetWorld()->GetGravityZ() / 100;
+	float NormalForce = Mass * AccelerationDueToGravity;
+	FVector RollingResistance = -Velocity.GetSafeNormal() * RollingResistanceCoeffecient * NormalForce;
+	return RollingResistance;
 }
 
 void AGoKart::AddRotation(float DeltaTime)
 {
-	float RotationAngle = MaxDegreesPerSecond * SteeringThrow * DeltaTime;
-	FQuat RotationDelta(GetActorUpVector(), FMath::DegreesToRadians(RotationAngle));
+	float DeltaLocation = FVector::DotProduct(GetActorForwardVector(), Velocity) * DeltaTime;
+	float RotationAngle = (DeltaLocation / MinTurningRadius) * SteeringThrow;
+	FQuat RotationDelta(GetActorUpVector(), RotationAngle);
 
 	Velocity = RotationDelta.RotateVector(Velocity);
 
-	AddActorWorldRotation(RotationDelta, true);
+	AddActorWorldRotation(RotationDelta);
 }
 
 // Called to bind functionality to input
