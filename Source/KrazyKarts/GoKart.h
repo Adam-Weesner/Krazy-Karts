@@ -17,15 +17,15 @@ public:
 protected:
 	virtual void BeginPlay() override;
 	
-	UFUNCTION(BlueprintCallable)
-	void MoveForward(float Axis);
+	UFUNCTION(BlueprintCallable, Server, Reliable, WithValidation)
+	void Server_MoveForward(float Axis);
 
-	UFUNCTION(BlueprintCallable)
-	void MoveRight(float Axis);
+	UFUNCTION(BlueprintCallable, Server, Reliable, WithValidation)
+	void Server_MoveRight(float Axis);
 
 private:
 	void AddRotation(float DeltaTime);
-	void GetVelocity(float DeltaTime);
+	void GetVehicleVelocity(float DeltaTime);
 	void SetOffset(float DeltaTime);
 	FVector GetAirResistance();
 	FVector GetRollingResistance();
