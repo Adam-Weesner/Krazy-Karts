@@ -19,8 +19,10 @@ void AGoKart::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetim
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME(AGoKart, ReplicatedLocation);
-	DOREPLIFETIME(AGoKart, ReplicatedRotation);
+	DOREPLIFETIME(AGoKart, ReplicatedTransform);
+	DOREPLIFETIME(AGoKart, Velocity);
+	DOREPLIFETIME(AGoKart, Throttle);
+	DOREPLIFETIME(AGoKart, SteeringThrow);
 }
 
 void AGoKart::MoveForward(float Axis)
@@ -81,19 +83,9 @@ void AGoKart::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (HasAuthority())
-	{
-		ReplicatedLocation = GetActorLocation();
-		ReplicatedRotation = GetActorRotation();
-		GetVehicleVelocity(DeltaTime);
-		SetOffset(DeltaTime);
-		AddRotation(DeltaTime);
-	}
-	else
-	{
-		SetActorLocation(ReplicatedLocation);
-		SetActorRotation(ReplicatedRotation);
-	}
+	GetVehicleVelocity(DeltaTime);
+	SetOffset(DeltaTime);
+	AddRotation(DeltaTime);
 
 	DrawDebugString(GetWorld(), FVector(0, 0, 100), GetEnumText(Role), this, FColor::White, DeltaTime);
 }
@@ -134,6 +126,18 @@ FVector AGoKart::GetRollingResistance()
 	float NormalForce = Mass * AccelerationDueToGravity;
 	FVector RollingResistance = -Velocity.GetSafeNormal() * RollingResistanceCoeffecient * NormalForce;
 	return RollingResistance;
+}
+
+void AGoKart::OnRep_ReplicatedTransform()
+{
+	if (HasAuthority())
+	{
+		ReplicatedTransform = GetActorTransform();
+	}
+	else
+	{
+		SetActorTransform(ReplicatedTransform);
+	}
 }
 
 void AGoKart::AddRotation(float DeltaTime)

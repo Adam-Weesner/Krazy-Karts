@@ -55,13 +55,19 @@ private:
 	UPROPERTY(Category = "Setup", EditDefaultsOnly)
 	float RollingResistanceCoeffecient = 0.015f;
 
-	UPROPERTY(Replicated)
-	FVector ReplicatedLocation;
+	// Replications
+	UPROPERTY(ReplicatedUsing = OnRep_ReplicatedTransform)
+	FTransform ReplicatedTransform;
+
+	UFUNCTION()
+	void OnRep_ReplicatedTransform();
 
 	UPROPERTY(Replicated)
-	FRotator ReplicatedRotation;
-
 	FVector Velocity;
+
+	UPROPERTY(Replicated)
 	float Throttle;
+
+	UPROPERTY(Replicated)
 	float SteeringThrow;
 };
