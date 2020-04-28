@@ -1,16 +1,26 @@
 // Written by Adam Weesner @ 2020
 #include "GoKart.h"
 #include "Engine/World.h"
+#include "Net/UnrealNetwork.h"
 #include "DrawDebugHelpers.h"
 
 AGoKart::AGoKart()
 {
 	PrimaryActorTick.bCanEverTick = true;
+	bReplicates = true;
 }
 
 void AGoKart::BeginPlay()
 {
 	Super::BeginPlay();
+}
+
+void AGoKart::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(AGoKart, ReplicatedLocation);
+	DOREPLIFETIME(AGoKart, ReplicatedRotation);
 }
 
 void AGoKart::MoveForward(float Axis)
@@ -71,9 +81,19 @@ void AGoKart::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	GetVehicleVelocity(DeltaTime);
-	SetOffset(DeltaTime);
-	AddRotation(DeltaTime);
+	if (HasAuthority())
+	{
+		ReplicatedLocation = GetActorLocation();
+		ReplicatedRotation = GetActorRotation();
+		GetVehicleVelocity(DeltaTime);
+		SetOffset(DeltaTime);
+		AddRotation(DeltaTime);
+	}
+	else
+	{
+		SetActorLocation(ReplicatedLocation);
+		SetActorRotation(ReplicatedRotation);
+	}
 
 	DrawDebugString(GetWorld(), FVector(0, 0, 100), GetEnumText(Role), this, FColor::White, DeltaTime);
 }
