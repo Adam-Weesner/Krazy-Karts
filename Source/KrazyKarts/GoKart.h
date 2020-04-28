@@ -4,6 +4,38 @@
 #include "GameFramework/Pawn.h"
 #include "GoKart.generated.h"
 
+USTRUCT()
+struct FGoKartMove
+{
+	GENERATED_USTRUCT_BODY()
+
+	UPROPERTY()
+	float DeltaTime;
+
+	UPROPERTY()
+	float Throttle;
+
+	UPROPERTY()
+	float SteeringThrow;
+
+	UPROPERTY()
+	float TimeStamp;
+};
+
+USTRUCT()
+struct FGoKartState
+{
+	GENERATED_USTRUCT_BODY()
+
+	FGoKartMove LastMove;
+
+	UPROPERTY()
+	FTransform Transform;
+
+	UPROPERTY()
+	FVector Velocity;
+};
+
 UCLASS()
 class KRAZYKARTS_API AGoKart : public APawn
 {
@@ -12,6 +44,7 @@ class KRAZYKARTS_API AGoKart : public APawn
 public:
 	AGoKart();
 	virtual void Tick(float DeltaTime) override;
+	void CreateMove(float DeltaTime);
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 protected:
@@ -25,13 +58,11 @@ protected:
 
 private:
 	UFUNCTION(Server, Reliable, WithValidation)
-	void Server_MoveForward(float Axis);
+	void Server_SendMove(FGoKartMove Move);
 
-	UFUNCTION(Server, Reliable, WithValidation)
-	void Server_MoveRight(float Axis);
-
-	void AddRotation(float DeltaTime);
-	void GetVehicleVelocity(float DeltaTime);
+	void SimulateMove(FGoKartMove Move);
+	void AddRotation(float DeltaTime, float InSteeringThrow);
+	void GetVehicleVelocity(float DeltaTime, float InThrottle);
 	void SetOffset(float DeltaTime);
 	FVector GetAirResistance();
 	FVector GetRollingResistance();
@@ -55,19 +86,14 @@ private:
 	UPROPERTY(Category = "Setup", EditDefaultsOnly)
 	float RollingResistanceCoeffecient = 0.015f;
 
+	FVector Velocity;
+	float Throttle;
+	float SteeringThrow;
+
 	// Replications
-	UPROPERTY(ReplicatedUsing = OnRep_ReplicatedTransform)
-	FTransform ReplicatedTransform;
+	UPROPERTY(ReplicatedUsing = OnRep_ReplicatedServerState)
+	FGoKartState ServerState;
 
 	UFUNCTION()
-	void OnRep_ReplicatedTransform();
-
-	UPROPERTY(Replicated)
-	FVector Velocity;
-
-	UPROPERTY(Replicated)
-	float Throttle;
-
-	UPROPERTY(Replicated)
-	float SteeringThrow;
+	void OnRep_ReplicatedServerState();
 };
