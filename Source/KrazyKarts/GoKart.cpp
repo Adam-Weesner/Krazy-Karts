@@ -2,6 +2,7 @@
 #include "GoKart.h"
 #include "Engine/World.h"
 #include "Net/UnrealNetwork.h"
+#include "GameFrameWork/GameState.h"
 #include "DrawDebugHelpers.h"
 
 AGoKart::AGoKart()
@@ -13,6 +14,11 @@ AGoKart::AGoKart()
 void AGoKart::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (HasAuthority())
+	{
+		NetUpdateFrequency = 1;
+	}
 }
 
 void AGoKart::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const
@@ -72,27 +78,43 @@ void AGoKart::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	GetVehicleVelocity(DeltaTime, Throttle);
-	SetOffset(DeltaTime);
-	AddRotation(DeltaTime, SteeringThrow);
-	CreateMove(DeltaTime);
+	SetupMove(DeltaTime);
 
 	DrawDebugString(GetWorld(), FVector(0, 0, 100), GetEnumText(Role), this, FColor::White, DeltaTime);
 }
 
-void AGoKart::CreateMove(float DeltaTime)
+void AGoKart::SetupMove(float DeltaTime)
 {
-	if (IsLocallyControlled())
-	{
-		FGoKartMove Move;
-		Move.DeltaTime = DeltaTime;
-		Move.SteeringThrow = SteeringThrow;
-		Move.Throttle = Throttle;
-		Move.TimeStamp = GetWorld()->TimeSeconds;
+	FGoKartMove Move = CreateMove(DeltaTime);
 
+	// We are the client
+	if (Role == ROLE_AutonomousProxy)
+	{
+		SimulateMove(Move); 
+		UnacknowledgedMoves.Add(Move);
 		Server_SendMove(Move);
-		SimulateMove(Move);
 	}
+	else if (Role == ROLE_SimulatedProxy)
+	{
+		SimulateMove(ServerState.LastMove);
+	}
+	// We are server and in control of the pawn
+	else if (Role == ROLE_Authority && IsLocallyControlled())
+	{
+		Server_SendMove(Move);
+	}
+}
+
+FGoKartMove AGoKart::CreateMove(float DeltaTime)
+{
+	FGoKartMove Move;
+
+	Move.DeltaTime = DeltaTime;
+	Move.SteeringThrow = SteeringThrow;
+	Move.Throttle = Throttle;
+	Move.TimeStamp = GetWorld()->GetGameState()->GetServerWorldTimeSeconds();
+
+	return Move;
 }
 
 void AGoKart::GetVehicleVelocity(float DeltaTime, float InThrottle)
@@ -133,13 +155,34 @@ FVector AGoKart::GetRollingResistance()
 	return RollingResistance;
 }
 
+void AGoKart::ClearAcknowledgedMoves(FGoKartMove LastMove)
+{
+	TArray<FGoKartMove> NewMoves;
+
+	for (const FGoKartMove& Move : UnacknowledgedMoves)
+	{
+		if (Move.TimeStamp > LastMove.TimeStamp)
+		{
+			NewMoves.Add(Move);
+		}
+	}
+
+	UnacknowledgedMoves = NewMoves;
+}
+
 void AGoKart::OnRep_ReplicatedServerState()
 {
 	SetActorTransform(ServerState.Transform);
 	Velocity = ServerState.Velocity;
+	ClearAcknowledgedMoves(ServerState.LastMove);
+
+	for (const FGoKartMove& Move : UnacknowledgedMoves)
+	{
+		SimulateMove(Move);
+	}
 }
 
-void AGoKart::SimulateMove(FGoKartMove Move)
+void AGoKart::SimulateMove(const FGoKartMove& Move)
 {
 	GetVehicleVelocity(Move.DeltaTime, Move.Throttle);
 	SetOffset(Move.DeltaTime);
@@ -161,4 +204,3 @@ void AGoKart::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 }
-

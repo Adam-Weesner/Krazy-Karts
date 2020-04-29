@@ -27,6 +27,7 @@ struct FGoKartState
 {
 	GENERATED_USTRUCT_BODY()
 
+	UPROPERTY()
 	FGoKartMove LastMove;
 
 	UPROPERTY()
@@ -44,7 +45,6 @@ class KRAZYKARTS_API AGoKart : public APawn
 public:
 	AGoKart();
 	virtual void Tick(float DeltaTime) override;
-	void CreateMove(float DeltaTime);
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 protected:
@@ -60,7 +60,10 @@ private:
 	UFUNCTION(Server, Reliable, WithValidation)
 	void Server_SendMove(FGoKartMove Move);
 
-	void SimulateMove(FGoKartMove Move);
+	void SetupMove(float DeltaTime);
+	FGoKartMove CreateMove(float DeltaTime);
+	void ClearAcknowledgedMoves(FGoKartMove LastMove);
+	void SimulateMove(const FGoKartMove& Move);
 	void AddRotation(float DeltaTime, float InSteeringThrow);
 	void GetVehicleVelocity(float DeltaTime, float InThrottle);
 	void SetOffset(float DeltaTime);
@@ -89,6 +92,7 @@ private:
 	FVector Velocity;
 	float Throttle;
 	float SteeringThrow;
+	TArray<FGoKartMove> UnacknowledgedMoves;
 
 	// Replications
 	UPROPERTY(ReplicatedUsing = OnRep_ReplicatedServerState)
