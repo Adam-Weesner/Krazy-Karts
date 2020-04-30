@@ -55,7 +55,7 @@ private:
 		UGoKartMovementComponent* MovementComponent;
 
 	TArray<FGoKartMove> UnacknowledgedMoves;
-	FVector ClientStartLocation;
+	FTransform ClientStartTransform;
 	float ClientTimeSinceUpdate;
 	float ClientTimeBetweenLastUpdate;
 };
