@@ -17,7 +17,7 @@ void UGoKartMovementComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
 void UGoKartMovementComponent::SetupMove(float DeltaTime)
 {
 	// We are in control of the pawn
-	if (GetOwnerRole() == ROLE_AutonomousProxy || GetOwner()->GetRemoteRole() == ROLE_SimulatedProxy)
+	if (GetOwnerRole() == ROLE_AutonomousProxy || Cast<APawn>(GetOwner())->IsLocallyControlled())
 	{
 		LastMove = CreateMove(DeltaTime);
 		SimulateMove(LastMove);

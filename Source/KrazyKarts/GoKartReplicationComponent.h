@@ -1,7 +1,5 @@
 // Written by Adam Weesner @ 2020
-
 #pragma once
-
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "GoKartMovementComponent.h"
@@ -12,47 +10,52 @@ struct FGoKartState
 {
 	GENERATED_USTRUCT_BODY()
 
-	UPROPERTY()
-	FGoKartMove LastMove;
+		UPROPERTY()
+		FGoKartMove LastMove;
 
 	UPROPERTY()
-	FTransform Transform;
+		FTransform Transform;
 
 	UPROPERTY()
-	FVector Velocity;
+		FVector Velocity;
 };
 
-UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
+UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class KRAZYKARTS_API UGoKartReplicationComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
-public:	
+public:
 	UGoKartReplicationComponent();
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 protected:
 	virtual void BeginPlay() override;
 
-private:	
-	UFUNCTION(Server, Reliable, WithValidation)
-	void Server_SendMove(FGoKartMove Move);
-
+private:
+	FString GetEnumText(ENetRole NetRole);
 	void SetupMove(float DeltaTime);
 	void ClearAcknowledgedMoves(FGoKartMove LastMove);
-	FString GetEnumText(ENetRole NetRole);
 	void UpdateServerState(const FGoKartMove& Move);
+	void ClientTick(float DeltaTime);
 
 	// Replications
 	UPROPERTY(ReplicatedUsing = OnRep_ReplicatedServerState)
-	FGoKartState ServerState;
+		FGoKartState ServerState;
+
+	UFUNCTION(Server, Reliable, WithValidation)
+		void Server_SendMove(FGoKartMove Move);
 
 	UFUNCTION()
-	void OnRep_ReplicatedServerState();
-
-	TArray<FGoKartMove> UnacknowledgedMoves;
+		void OnRep_ReplicatedServerState();
+	void SimulatedProxy_OnRep_ReplicatedServerState();
+	void AutonomousProxy_OnRep_ReplicatedServerState();
 
 	UPROPERTY()
-	UGoKartMovementComponent* MovementComponent;
-		
+		UGoKartMovementComponent* MovementComponent;
+
+	TArray<FGoKartMove> UnacknowledgedMoves;
+	FVector ClientStartLocation;
+	float ClientTimeSinceUpdate;
+	float ClientTimeBetweenLastUpdate;
 };

@@ -9,3 +9,11 @@ AGoKart::AGoKart()
 	MovementComponent = CreateDefaultSubobject<UGoKartMovementComponent>(TEXT("Movement Component"));
 	ReplicationComponent = CreateDefaultSubobject<UGoKartReplicationComponent>(TEXT("Replication Component"));
 }
+
+void AGoKart::BeginPlay()
+{
+	if (HasAuthority())
+	{
+		NetUpdateFrequency = 1;
+	}
+}

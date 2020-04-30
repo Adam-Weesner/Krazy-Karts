@@ -13,6 +13,7 @@ class KRAZYKARTS_API AGoKart : public APawn
 
 public:
 	AGoKart();
+	virtual void BeginPlay() override;
 
 protected:
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
