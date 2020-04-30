@@ -41,6 +41,7 @@ private:
 	void SetupMove(float DeltaTime);
 	void ClearAcknowledgedMoves(FGoKartMove LastMove);
 	FString GetEnumText(ENetRole NetRole);
+	void UpdateServerState(const FGoKartMove& Move);
 
 	// Replications
 	UPROPERTY(ReplicatedUsing = OnRep_ReplicatedServerState)

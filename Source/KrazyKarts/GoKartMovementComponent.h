@@ -27,11 +27,13 @@ class KRAZYKARTS_API UGoKartMovementComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
-public:	
+public:
+	UGoKartMovementComponent();
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	void SimulateMove(const FGoKartMove& Move);
 	void SetVelocity(FVector InVelocity) { Velocity = InVelocity; };
 	FVector GetVelocity() { return Velocity; };
-	FGoKartMove CreateMove(float DeltaTime);
-	void SimulateMove(const FGoKartMove& Move);
+	FGoKartMove GetLastMove() { return LastMove; };
 
 protected:
 	UFUNCTION(BlueprintCallable)
@@ -40,7 +42,8 @@ protected:
 	UFUNCTION(BlueprintCallable)
 	void MoveRight(float Axis);
 
-private:	
+private:
+	FGoKartMove CreateMove(float DeltaTime);
 	void AddRotation(float DeltaTime, float InSteeringThrow);
 	void GetVehicleVelocity(float DeltaTime, float InThrottle);
 	void SetOffset(float DeltaTime);
@@ -69,4 +72,5 @@ private:
 	FVector Velocity;
 	float Throttle;
 	float SteeringThrow;
+	FGoKartMove LastMove;
 };

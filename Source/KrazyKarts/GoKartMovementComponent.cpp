@@ -3,6 +3,21 @@
 #include "Engine/World.h"
 #include "GameFrameWork/GameState.h"
 
+UGoKartMovementComponent::UGoKartMovementComponent()
+{
+	PrimaryComponentTick.bCanEverTick = true;
+}
+
+void UGoKartMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+{
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+	if (GetOwnerRole() == ROLE_AutonomousProxy || GetOwner()->GetRemoteRole() == ROLE_SimulatedProxy)
+	{
+		LastMove = CreateMove(DeltaTime);
+		SimulateMove(LastMove);
+	}
+}
+
 void UGoKartMovementComponent::MoveForward(float Axis)
 {
 	Throttle = FMath::Clamp(Axis, -1.0f, 1.0f);
