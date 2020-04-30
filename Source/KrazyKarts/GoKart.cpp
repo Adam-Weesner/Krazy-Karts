@@ -5,6 +5,7 @@ AGoKart::AGoKart()
 {
 	PrimaryActorTick.bCanEverTick = true;
 	bReplicates = true;
+	bReplicateMovement = false;
 
 	MovementComponent = CreateDefaultSubobject<UGoKartMovementComponent>(TEXT("Movement Component"));
 	ReplicationComponent = CreateDefaultSubobject<UGoKartReplicationComponent>(TEXT("Replication Component"));
@@ -12,6 +13,7 @@ AGoKart::AGoKart()
 
 void AGoKart::BeginPlay()
 {
+	Super::BeginPlay();
 	if (HasAuthority())
 	{
 		NetUpdateFrequency = 1;

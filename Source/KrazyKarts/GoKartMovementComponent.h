@@ -35,7 +35,6 @@ public:
 	FVector GetVelocity() { return Velocity; };
 	FGoKartMove GetLastMove() { return LastMove; };
 
-protected:
 	UFUNCTION(BlueprintCallable)
 	void MoveForward(float Axis);
 

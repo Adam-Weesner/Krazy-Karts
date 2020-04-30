@@ -98,8 +98,9 @@ void UGoKartReplicationComponent::ClientTick(float DeltaTime)
 
 	FVector TargetLocation = ServerState.Transform.GetLocation();
 	float LerpRatio = ClientTimeSinceUpdate / ClientTimeBetweenLastUpdate;
-	FVector StartLocation = ClientStartLocation;
-	FVector NextLocation = FMath::LerpStable(StartLocation, TargetLocation, LerpRatio);
+
+	FVector NextLocation = FMath::LerpStable(ClientStartLocation, TargetLocation, LerpRatio);
+
 	GetOwner()->SetActorLocation(NextLocation);
 }
 
