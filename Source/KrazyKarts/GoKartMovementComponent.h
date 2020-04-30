@@ -28,16 +28,12 @@ class KRAZYKARTS_API UGoKartMovementComponent : public UActorComponent
 	GENERATED_BODY()
 
 public:	
-	UGoKartMovementComponent();	
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	void SetVelocity(FVector InVelocity) { Velocity = InVelocity; };
 	FVector GetVelocity() { return Velocity; };
 	FGoKartMove CreateMove(float DeltaTime);
 	void SimulateMove(const FGoKartMove& Move);
 
 protected:
-	virtual void BeginPlay() override;
-
 	UFUNCTION(BlueprintCallable)
 	void MoveForward(float Axis);
 

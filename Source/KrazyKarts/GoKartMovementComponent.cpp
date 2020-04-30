@@ -3,21 +3,6 @@
 #include "Engine/World.h"
 #include "GameFrameWork/GameState.h"
 
-UGoKartMovementComponent::UGoKartMovementComponent()
-{
-	PrimaryComponentTick.bCanEverTick = true;
-}
-
-void UGoKartMovementComponent::BeginPlay()
-{
-	Super::BeginPlay();
-}
-
-void UGoKartMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
-{
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-}
-
 void UGoKartMovementComponent::MoveForward(float Axis)
 {
 	Throttle = FMath::Clamp(Axis, -1.0f, 1.0f);
