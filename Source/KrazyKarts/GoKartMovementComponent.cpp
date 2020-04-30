@@ -11,6 +11,12 @@ UGoKartMovementComponent::UGoKartMovementComponent()
 void UGoKartMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+	SetupMove(DeltaTime);
+}
+
+void UGoKartMovementComponent::SetupMove(float DeltaTime)
+{
+	// We are in control of the pawn
 	if (GetOwnerRole() == ROLE_AutonomousProxy || GetOwner()->GetRemoteRole() == ROLE_SimulatedProxy)
 	{
 		LastMove = CreateMove(DeltaTime);

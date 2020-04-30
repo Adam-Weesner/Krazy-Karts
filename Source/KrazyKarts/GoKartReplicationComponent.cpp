@@ -37,14 +37,15 @@ void UGoKartReplicationComponent::SetupMove(float DeltaTime)
 		UnacknowledgedMoves.Add(LastMove);
 		Server_SendMove(LastMove);
 	}
+	// We are server and in control of the pawn
+	else if (GetOwner()->GetRemoteRole() == ROLE_SimulatedProxy)
+	{
+		UpdateServerState(LastMove);
+	}
+	// We are a non-player-controlled entity
 	else if (GetOwnerRole() == ROLE_SimulatedProxy)
 	{
 		MovementComponent->SimulateMove(ServerState.LastMove);
-	}
-	// We are server and in control of the pawn
-	else if (Cast<APawn>(GetOwner())->IsLocallyControlled())
-	{
-		UpdateServerState(LastMove);
 	}
 }
 

@@ -12,14 +12,14 @@ struct FGoKartState
 {
 	GENERATED_USTRUCT_BODY()
 
-		UPROPERTY()
-		FGoKartMove LastMove;
+	UPROPERTY()
+	FGoKartMove LastMove;
 
 	UPROPERTY()
-		FTransform Transform;
+	FTransform Transform;
 
 	UPROPERTY()
-		FVector Velocity;
+	FVector Velocity;
 };
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
