@@ -95,19 +95,27 @@ void UGoKartReplicationComponent::ClientTick(float DeltaTime)
 
 	// Avoiding floating point number division with very small numbers
 	if (ClientTimeBetweenLastUpdate < KINDA_SMALL_NUMBER) return;
+	if (!ensure(MovementComponent)) return;
 
 	FVector StartLocation = ClientStartTransform.GetLocation();
 	FVector TargetLocation = ServerState.Transform.GetLocation();
 	float LerpRatio = ClientTimeSinceUpdate / ClientTimeBetweenLastUpdate;
+	float VelocityToDerative = ClientTimeBetweenLastUpdate * 100; // 100 to convert between meters and cm
+	FVector StartDerivative = ClientStartVelocity * VelocityToDerative;
+	FVector TargetDerivative = ServerState.Velocity * VelocityToDerative;
 
-	FVector NextLocation = FMath::LerpStable(StartLocation, TargetLocation, LerpRatio);
-	GetOwner()->SetActorLocation(NextLocation);
+	FVector NewLocation = FMath::CubicInterp(StartLocation, StartDerivative, TargetLocation, TargetDerivative, LerpRatio);
+	GetOwner()->SetActorLocation(NewLocation);
+
+	FVector NewDerivative = FMath::CubicInterpDerivative(StartLocation, StartDerivative, TargetLocation, TargetDerivative, LerpRatio);
+	FVector NewVelocity = NewDerivative / VelocityToDerative;
+	MovementComponent->SetVelocity(NewVelocity);
 
 	FQuat StartRotation = ClientStartTransform.GetRotation();
 	FQuat TargetRotation = ServerState.Transform.GetRotation();
 
-	FQuat NextRotation = FQuat::Slerp(StartRotation, TargetRotation, LerpRatio);
-	GetOwner()->SetActorRotation(NextRotation);
+	FQuat NewRotation = FQuat::Slerp(StartRotation, TargetRotation, LerpRatio);
+	GetOwner()->SetActorRotation(NewRotation);
 }
 
 void UGoKartReplicationComponent::ClearAcknowledgedMoves(FGoKartMove LastMove)
@@ -143,9 +151,12 @@ void UGoKartReplicationComponent::OnRep_ReplicatedServerState()
 
 void UGoKartReplicationComponent::SimulatedProxy_OnRep_ReplicatedServerState()
 {
+	if (!ensure(MovementComponent)) return;
+
 	ClientTimeBetweenLastUpdate = ClientTimeSinceUpdate;
 	ClientTimeSinceUpdate = 0;
 	ClientStartTransform = GetOwner()->GetActorTransform();
+	ClientStartVelocity = MovementComponent->GetVelocity();
 }
 
 void UGoKartReplicationComponent::AutonomousProxy_OnRep_ReplicatedServerState()
