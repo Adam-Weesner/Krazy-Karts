@@ -78,10 +78,11 @@ private:
 	UPROPERTY()
 	UGoKartMovementComponent* MovementComponent;
 
-
 	TArray<FGoKartMove> UnacknowledgedMoves;
 	FTransform ClientStartTransform;
 	float ClientTimeSinceUpdate;
 	float ClientTimeBetweenLastUpdate;
 	FVector ClientStartVelocity;
+
+	float ClientSimulatedTime;
 };
