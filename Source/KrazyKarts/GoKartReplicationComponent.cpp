@@ -97,25 +97,45 @@ void UGoKartReplicationComponent::ClientTick(float DeltaTime)
 	if (ClientTimeBetweenLastUpdate < KINDA_SMALL_NUMBER) return;
 	if (!ensure(MovementComponent)) return;
 
-	FVector StartLocation = ClientStartTransform.GetLocation();
-	FVector TargetLocation = ServerState.Transform.GetLocation();
-	float LerpRatio = ClientTimeSinceUpdate / ClientTimeBetweenLastUpdate;
-	float VelocityToDerative = ClientTimeBetweenLastUpdate * 100; // 100 to convert between meters and cm
-	FVector StartDerivative = ClientStartVelocity * VelocityToDerative;
-	FVector TargetDerivative = ServerState.Velocity * VelocityToDerative;
+	FHermiteCubicSpline Spline = CreateSpline();
+	InterpLocation(Spline);
+	InterpDerivative(Spline);
+	InterpRotation(Spline);
+}
 
-	FVector NewLocation = FMath::CubicInterp(StartLocation, StartDerivative, TargetLocation, TargetDerivative, LerpRatio);
+void UGoKartReplicationComponent::InterpLocation(const FHermiteCubicSpline& Spline)
+{
+	FVector NewLocation = Spline.InterpolateLocation();
 	GetOwner()->SetActorLocation(NewLocation);
+}
 
-	FVector NewDerivative = FMath::CubicInterpDerivative(StartLocation, StartDerivative, TargetLocation, TargetDerivative, LerpRatio);
-	FVector NewVelocity = NewDerivative / VelocityToDerative;
+void UGoKartReplicationComponent::InterpDerivative(const FHermiteCubicSpline& Spline)
+{
+	FVector NewDerivative = Spline.InterpolateDerivative();
+	FVector NewVelocity = NewDerivative / Spline.VelocityToDerative;
 	MovementComponent->SetVelocity(NewVelocity);
+}
 
+void UGoKartReplicationComponent::InterpRotation(const FHermiteCubicSpline& Spline)
+{
 	FQuat StartRotation = ClientStartTransform.GetRotation();
 	FQuat TargetRotation = ServerState.Transform.GetRotation();
 
-	FQuat NewRotation = FQuat::Slerp(StartRotation, TargetRotation, LerpRatio);
+	FQuat NewRotation = FQuat::Slerp(StartRotation, TargetRotation, Spline.LerpRatio);
 	GetOwner()->SetActorRotation(NewRotation);
+}
+
+FHermiteCubicSpline UGoKartReplicationComponent::CreateSpline()
+{
+	FHermiteCubicSpline Spline;
+	Spline.LerpRatio = ClientTimeSinceUpdate / ClientTimeBetweenLastUpdate;
+	Spline.VelocityToDerative = ClientTimeBetweenLastUpdate * 100; // 100 to convert between meters and cm
+	Spline.StartLocation = ClientStartTransform.GetLocation();
+	Spline.TargetLocation = ServerState.Transform.GetLocation();
+	Spline.StartDerivative = ClientStartVelocity * Spline.VelocityToDerative;
+	Spline.TargetDerivative = ServerState.Velocity * Spline.VelocityToDerative;
+
+	return Spline;
 }
 
 void UGoKartReplicationComponent::ClearAcknowledgedMoves(FGoKartMove LastMove)
