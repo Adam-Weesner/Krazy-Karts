@@ -69,8 +69,15 @@ private:
 	void SimulatedProxy_OnRep_ReplicatedServerState();
 	void AutonomousProxy_OnRep_ReplicatedServerState();
 
+	UFUNCTION(BlueprintCallable)
+	void SetMeshOffsetRoot(USceneComponent* Root) { MeshOffsetRoot = Root; }
+
+	UPROPERTY()
+	USceneComponent* MeshOffsetRoot;
+
 	UPROPERTY()
 	UGoKartMovementComponent* MovementComponent;
+
 
 	TArray<FGoKartMove> UnacknowledgedMoves;
 	FTransform ClientStartTransform;

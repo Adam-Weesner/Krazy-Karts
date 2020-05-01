@@ -2,6 +2,7 @@
 #include "GoKartReplicationComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "DrawDebugHelpers.h"
+#include "GameFramework/Actor.h"
 
 UGoKartReplicationComponent::UGoKartReplicationComponent()
 {
@@ -105,8 +106,10 @@ void UGoKartReplicationComponent::ClientTick(float DeltaTime)
 
 void UGoKartReplicationComponent::InterpLocation(const FHermiteCubicSpline& Spline)
 {
+	if (!ensure(MeshOffsetRoot)) return;
+
 	FVector NewLocation = Spline.InterpolateLocation();
-	GetOwner()->SetActorLocation(NewLocation);
+	MeshOffsetRoot->SetWorldLocation(NewLocation);
 }
 
 void UGoKartReplicationComponent::InterpDerivative(const FHermiteCubicSpline& Spline)
@@ -118,11 +121,12 @@ void UGoKartReplicationComponent::InterpDerivative(const FHermiteCubicSpline& Sp
 
 void UGoKartReplicationComponent::InterpRotation(const FHermiteCubicSpline& Spline)
 {
+	if (!ensure(MeshOffsetRoot)) return;
+
 	FQuat StartRotation = ClientStartTransform.GetRotation();
 	FQuat TargetRotation = ServerState.Transform.GetRotation();
-
 	FQuat NewRotation = FQuat::Slerp(StartRotation, TargetRotation, Spline.LerpRatio);
-	GetOwner()->SetActorRotation(NewRotation);
+	MeshOffsetRoot->SetWorldRotation(NewRotation);
 }
 
 FHermiteCubicSpline UGoKartReplicationComponent::CreateSpline()
@@ -172,11 +176,15 @@ void UGoKartReplicationComponent::OnRep_ReplicatedServerState()
 void UGoKartReplicationComponent::SimulatedProxy_OnRep_ReplicatedServerState()
 {
 	if (!ensure(MovementComponent)) return;
+	if (!ensure(MeshOffsetRoot)) return;
 
 	ClientTimeBetweenLastUpdate = ClientTimeSinceUpdate;
 	ClientTimeSinceUpdate = 0;
-	ClientStartTransform = GetOwner()->GetActorTransform();
+	ClientStartTransform.SetLocation(MeshOffsetRoot->GetComponentLocation());
+	ClientStartTransform.SetRotation(MeshOffsetRoot->GetComponentQuat());
 	ClientStartVelocity = MovementComponent->GetVelocity();
+
+	GetOwner()->SetActorTransform(ServerState.Transform);
 }
 
 void UGoKartReplicationComponent::AutonomousProxy_OnRep_ReplicatedServerState()
